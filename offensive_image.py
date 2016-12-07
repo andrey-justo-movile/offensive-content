@@ -21,3 +21,4 @@ class OffensiveImage():
 
 #tests made a poor performance and a lot of false positive
 print(OffensiveImage('./images/nude-1.jpeg').is_nude())
+print(OffensiveImage('./images/nude-2.jpg').is_nude())
