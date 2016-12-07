@@ -16,7 +16,7 @@ class OffensiveImage():
         self.nude_image = Nude(path)
         
     def is_nude(self):
-        return self.nude_image.parse().result()
+        return self.nude_image.parse().result
 
 
 #tests made a poor performance and a lot of false positive
