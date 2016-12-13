@@ -3,11 +3,20 @@
 Created on Dec 7, 2016
 
 @author: andrey.justo
+
+Here we are using NLP to count all bad words from text
+Also we use OneClassSVM to classify if the text belongs to the offensive phrase categorization or not. 
+
+You can see more about this classifier in http://scikit-learn.org/stable/auto_examples/svm/plot_oneclass.html
+
 '''
 
 import codecs
-import time
 import re
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.multiclass import OneVsRestClassifier
+from sklearn.svm import OneClassSVM
+
 
 class OffensiveWords():
 
@@ -15,23 +24,25 @@ class OffensiveWords():
         self.lang_bad_words = set(w for w in [line.strip() for line in codecs.open("./" + language + ".txt", 'r', "utf-8")])
         self.delimiter_regex = ' |\\.|\\?|\\!|,|;'
         
+        # init classifier algorithm
+        self.load_data(language)
+        
+        
+    def load_data(self, language):
+        self.vectorizer = CountVectorizer()
+        words = list(self.lang_bad_words)
+        counts = self.vectorizer.fit_transform(words)
+        targets = ['bad_words', 'not_bad_words']
+
+        self.classifier = OneVsRestClassifier(OneClassSVM(nu=0.1, kernel="rbf", gamma=0.1))
+        self.classifier.fit(counts, targets)
+        
     def badwords(self, words):
         # we should split by any other characters
         for word in re.split(self.delimiter_regex, words):
-            if word in self.lang_bad_words:
+            if word.lower() in self.lang_bad_words:
                 yield word
-                              
-def main():            
-    bad_words = list(OffensiveWords("portuguese").badwords("Mas afinal o que é um filho da puta? Não obstante a frequência com que o termo é empregue na classificação axiomática de reconhecidos sociopatas como banqueiros, especuladores financeiros e ministros, não existe ainda consenso bastante para alcançar uma definição acabada. Longe de pretender ser tratado sobre o tema, este artigo é um subsídio para uma definição mínima. Caso o leitor responda afirmativamente a, pelo menos, cinco questões, então é provável que seja um filho da puta."))
-                     
-    for w in bad_words:
-        print(w)
-    
-    if len(bad_words) > 0:
-        print("OFFENSIVE PHRASE")
-        
-start = time.time()
-main()
-print()
-end = time.time()
-print(end - start)
+                
+    def classify(self, text):
+        counts = self.vectorizer.transform(text)
+        yield self.classifier.predict(counts)
